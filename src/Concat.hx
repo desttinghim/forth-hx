@@ -26,17 +26,21 @@ class Concat {
       var token:String = nextToken();
       if (token==null) continue;
       var x = getXT(token);
-      if (!compiling || (x != null && words[x] != null && words[x].immediate)){
+      if (!compiling){
         if (words[x]!=null)  {
           if (words[x].native) words[x].func();
-          else              interpWords(words[x].def);
+          else                 interpWords(words[x].def);
         } else if(Std.parseInt(token)!=null) {
           push({value:Std.parseInt(token), type:Int});
         } else {
           Sys.print("no such word");
         }
-      } else {
-
+      } else if(x != null && words[x] != null) {
+          if(words[x].immediate) {interpOneWord(x);}
+          else push({value: x, type: Int});
+      } else if(Std.parseInt(token)!=null) {
+        push({value: -1, type:Int});
+        push({value:Std.parseInt(token), type:Int});
       }
     }
   }
@@ -64,7 +68,11 @@ class Concat {
     addWord("drop", function() pop());
     addWord("swap", function() {var a=pop(); var b=pop(); push(a); push(b);});
     addWord(":", function() {
-      var a = nextToken(); if (getXT(a) == null) {}
+      var a = nextToken();
+      if (getXT(a)==null && Std.parseInt(a)==null) {
+        words.push({word: a, native: false, immediate: false, func: null, def:[]});
+        compiling = true;
+      }
     });
   }
 
