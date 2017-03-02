@@ -18,21 +18,25 @@ class Concat {
   public var tokens:Array<String>;
   public var stack:Array<{value:Dynamic,type:StackType}>;
   public var rstack:Array<{value:Dynamic,type:StackType}>;
+  public var compiling:Bool=false;
 
   public function run() {
     while(true) {
       if (tokens.length == 0)  getInput();
       var token:String = nextToken();
       if (token==null) continue;
-      var xword = null;
-      for (word in words) {
-        if (word.word == token) xword = word;
-      }
-      if (xword!=null)  {
-        if (xword.native) xword.func();
-        else              interpWords(xword.def);
+      var x = getXT(token);
+      if (!compiling || (x != null && words[x] != null && words[x].immediate)){
+        if (words[x]!=null)  {
+          if (words[x].native) words[x].func();
+          else              interpWords(words[x].def);
+        } else if(Std.parseInt(token)!=null) {
+          push({value:Std.parseInt(token), type:Int});
+        } else {
+          Sys.print("no such word");
+        }
       } else {
-        push({value:Std.parseInt(token), type:Int});
+
       }
     }
   }
@@ -59,7 +63,9 @@ class Concat {
     addWord("dup", function() {var a=pop(); push(a); push(a);});
     addWord("drop", function() pop());
     addWord("swap", function() {var a=pop(); var b=pop(); push(a); push(b);});
-    addWord("sq", null, [6, 2]);
+    addWord(":", function() {
+      var a = nextToken(); if (getXT(a) == null) {}
+    });
   }
 
   public function addWord(word, ?func=null, ?def=null, ?immediate=false) {
@@ -72,8 +78,19 @@ class Concat {
     });
   }
 
+  public function getXT(name:String) {
+    for (i in 0...words.length) {
+      if (words[i].word == name) return i;
+    }
+    return null;
+  }
+
   public function interpWords(tokens:Array<Int>) {
-    for (token in tokens) interpOneWord(token);
+    var i = 0;
+    while (i < tokens.length) {
+      if(tokens[i]>=0) {interpOneWord(tokens[i]); i+=1;}
+      else if(tokens[i]==-1) {push({value:tokens[i+1],type:Int}); i+=2;};
+    };
   }
 
   public function interpOneWord(xtoken) {
