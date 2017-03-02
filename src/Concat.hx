@@ -27,7 +27,7 @@ class Concat {
       if (token==null) continue;
       var x = getXT(token);
       if (!compiling){
-        if (words[x]!=null)  {
+        if (x < words.length)  {
           if (words[x].native) words[x].func();
           else                 interpWords(words[x].def);
         } else if(Std.parseInt(token)!=null) {
@@ -37,10 +37,10 @@ class Concat {
         }
       } else if(x != null && words[x] != null) {
           if(words[x].immediate) {interpOneWord(x);}
-          else push({value: x, type: Int});
+          else words[words.length-1].def.push(x);
       } else if(Std.parseInt(token)!=null) {
-        push({value: -1, type:Int});
-        push({value:Std.parseInt(token), type:Int});
+        words[words.length-1].def.push(-1);
+        words[words.length-1].def.push(Std.parseInt(token));
       }
     }
   }
@@ -74,6 +74,9 @@ class Concat {
         compiling = true;
       }
     });
+    addWord(";", function() {
+      compiling = false;
+    }, null, true);
   }
 
   public function addWord(word, ?func=null, ?def=null, ?immediate=false) {
