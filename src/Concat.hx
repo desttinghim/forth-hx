@@ -55,10 +55,11 @@ class Concat {
     addWord("*", function() push({value: pop().value * pop().value, type: Int}));
     addWord("/", function() push({value: pop().value / pop().value, type: Int}));
     addWord("clr", function() Sys.command("clear"));
-    addWord("print", function() Sys.print(pop().value));
-    addWord("dup", function() {var a=pop(); push(a);});
+    addWord("print", function() {var a=pop(); if(a==null)Sys.print("stack underflow"); else Sys.print(a.value); });
+    addWord("dup", function() {var a=pop(); push(a); push(a);});
     addWord("drop", function() pop());
     addWord("swap", function() {var a=pop(); var b=pop(); push(a); push(b);});
+    addWord("sq", null, [6, 2]);
   }
 
   public function addWord(word, ?func=null, ?def=null, ?immediate=false) {
