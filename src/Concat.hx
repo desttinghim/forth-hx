@@ -17,7 +17,7 @@ class Concat {
   public var words:Array<DictEntry>;
   public var tokens:Array<String>;
   public var stack:Array<{value:Dynamic,type:StackType}>;
-  public var rStack:Array<{value:Dynamic,type:StackType}>;
+  public var rstack:Array<{value:Dynamic,type:StackType}>;
 
   public function run() {
     while(true) {
@@ -32,7 +32,7 @@ class Concat {
         if (xword.native) xword.func();
         else              interpWords(xword.def);
       } else {
-        push(Std.parseInt(token), Int);
+        push({value:Std.parseInt(token), type:Int});
       }
     }
   }
@@ -49,21 +49,24 @@ class Concat {
     tokens = [];
     words = [];
     stack = [];
-    rStack = [];
-    addWord("+", function() push(pop().value + pop().value, Int));
-    addWord("-", function() push(pop().value - pop().value, Int));
-    addWord("*", function() push(pop().value * pop().value, Int));
-    addWord("/", function() push(pop().value / pop().value, Int));
+    rstack = [];
+    addWord("+", function() push({value: pop().value + pop().value, type: Int}));
+    addWord("-", function() push({value: pop().value - pop().value, type: Int}));
+    addWord("*", function() push({value: pop().value * pop().value, type: Int}));
+    addWord("/", function() push({value: pop().value / pop().value, type: Int}));
+    addWord("clr", function() Sys.command("clear"));
     addWord("print", function() Sys.print(pop().value));
-    addWord("clear", function() Sys.command("clear"));
+    addWord("dup", function() {var a=pop(); push(a);});
+    addWord("drop", function() pop());
+    addWord("swap", function() {var a=pop(); var b=pop(); push(a); push(b);});
   }
 
-  public function addWord(word, func, ?def=null) {
+  public function addWord(word, ?func=null, ?def=null, ?immediate=false) {
     words.push({
-      word:word,
-      native:false,
-      immediate:false,
-      func:func,
+      word: word,
+      native: func!=null,
+      immediate: immediate,
+      func: func,
       def: def==null?[]:def,
     });
   }
@@ -77,12 +80,20 @@ class Concat {
     else                      interpWords(words[xtoken].def);
   }
 
-  public function push(val, type) {
-    stack.push({value:val, type:type});
+  public function push(data) {
+    stack.push(data);
   }
 
   public function pop() {
     return stack.pop();
+  }
+
+  public function rpush(data) {
+    rstack.push(data);
+  }
+
+  public function rpop() {
+    return rstack.pop();
   }
   // Steps:
   // 1. Tokenize
